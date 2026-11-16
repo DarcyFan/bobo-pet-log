@@ -1,6 +1,7 @@
 /* 波波日记 — Service Worker
-   目标：iPhone 上断网也能打开，且升级时自动换新版本。 */
-const CACHE = 'bobo-v1';
+   目标：iPhone 上断网也能打开，且升级时自动换新版本。
+   发新版时把下面的版本号 +1，老缓存会被清掉。 */
+const CACHE = 'bobo-v2';
 
 const ASSETS = [
   './',

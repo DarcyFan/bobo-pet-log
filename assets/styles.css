@@ -311,6 +311,14 @@ h1, h2, h3, h4, p { margin: 0; }
 .stat-v small { font-size: 12px; font-weight: 600; margin-left: 3px; }
 .stat-k { font-size: 11px; color: var(--ink-2); margin-top: 1px; letter-spacing: .02em; }
 
+button.stat {
+  border: 0; padding: 0; background: none;
+  width: 100%; display: block; cursor: pointer;
+  text-align: center;
+  transition: opacity .15s var(--ease), transform .15s var(--ease);
+}
+button.stat:active { opacity: .55; transform: scale(.96); }
+
 /* ---------- 快捷操作 ---------- */
 .quick-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
 .quick {

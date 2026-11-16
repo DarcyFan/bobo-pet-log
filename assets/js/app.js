@@ -91,6 +91,14 @@ const app = {
     this.render();
   },
 
+  /** 跳到时间线并套用某个筛选（首页/档案的统计数字点进来用） */
+  openTimeline(filter = 'all') {
+    this.state.filter = filter;
+    this.state.q = '';
+    this.state.searchOpen = false;
+    this.go('timeline');
+  },
+
   openAdd() {
     openAddPicker(this);
   },
@@ -180,7 +188,7 @@ const app = {
 
   /* ---------- 日历导出 ---------- */
   exportICS() {
-    const items = this.derived.rem.all;
+    const items = [...this.derived.rem.all, ...(this.derived.rem.birthdays || [])];
     if (!items.length) { toast('现在没有提醒可以导出'); return; }
 
     const esc = (s) => String(s).replace(/\\/g, '\\\\').replace(/[,;]/g, (c) => '\\' + c).replace(/\n/g, '\\n');

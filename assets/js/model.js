@@ -100,7 +100,7 @@ export const FILTERS = [
   { k: 'feed', label: '喂食', types: ['feeding', 'water'] },
   { k: 'health', label: '健康', types: ['vaccine', 'deworm', 'vet', 'med'] },
   { k: 'care', label: '护理', types: ['care'] },
-  { k: 'photo', label: '相册', types: ['memo'] }
+  { k: 'photo', label: '相册', types: null, requirePhotos: true }
 ];
 
 /* ---------------- 工具 ---------------- */
@@ -114,7 +114,9 @@ export function sortRecords(list, desc = true) {
 
 export function matchesFilter(rec, filterKey) {
   const f = FILTERS.find((x) => x.k === filterKey);
-  if (!f || !f.types) return true;
+  if (!f) return true;
+  if (f.requirePhotos && !((rec.photos || []).length)) return false;
+  if (!f.types) return true;
   return f.types.includes(rec.type);
 }
 
@@ -247,14 +249,19 @@ export function buildReminders({ pet, records = [], reminders = [], supplies = [
   const pending = items.filter((it) => !(it.doneAt && it.repeat === 'none'));
   const done = items.filter((it) => it.doneAt && it.repeat === 'none');
 
-  pending.sort((a, b) => a.days - b.days);
+  // 生日属于「纪念日」，不算待办，不参与计数
+  const birthdays = pending.filter((it) => it.cat === 'birthday');
+  const todo = pending.filter((it) => it.cat !== 'birthday');
+
+  todo.sort((a, b) => a.days - b.days);
   return {
-    all: pending,
-    overdue: pending.filter((i) => i.status === 'over'),
-    soon: pending.filter((i) => i.status === 'soon'),
-    later: pending.filter((i) => i.status === 'later'),
+    all: todo,
+    overdue: todo.filter((i) => i.status === 'over'),
+    soon: todo.filter((i) => i.status === 'soon'),
+    later: todo.filter((i) => i.status === 'later'),
     done,
-    urgent: pending.filter((i) => i.days <= 7)
+    urgent: todo.filter((i) => i.days <= 7),
+    birthdays
   };
 }
 

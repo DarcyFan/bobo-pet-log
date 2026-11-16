@@ -38,11 +38,15 @@ function chip(text, tone = '') {
   return el('span', { class: 'chip ' + tone }, text);
 }
 
-function statNode(value, unit, label) {
-  return el('div', { class: 'stat' },
+function statNode(value, unit, label, onClick) {
+  const inner = [
     el('div', { class: 'stat-v num' }, String(value), unit ? el('small', {}, unit) : null),
     el('div', { class: 'stat-k' }, label)
-  );
+  ];
+  if (onClick) {
+    return el('button', { class: 'stat', type: 'button', onclick: onClick }, ...inner);
+  }
+  return el('div', { class: 'stat' }, ...inner);
 }
 
 function quickBtn(label, ic, tone, onClick) {
@@ -149,9 +153,9 @@ export function renderHome(app) {
       )
     ),
     el('div', { class: 'hero-stats' },
-      statNode(latest ? fmtNum(latest.v) : '—', latest ? 'kg' : '', '最新体重'),
-      statNode(ov.count, '', '条记录'),
-      statNode(rem.urgent.length, '', '项待办')
+      statNode(latest ? fmtNum(latest.v) : '—', latest ? 'kg' : '', '最新体重', () => app.openTimeline('weight')),
+      statNode(ov.count, '', '条记录', () => app.openTimeline('all')),
+      statNode(rem.all.length, '', '项待办', () => app.go('reminders'))
     )
   ));
 
@@ -351,7 +355,10 @@ function tlItem(r, app) {
 export function renderReminders(app) {
   const rem = app.derived.rem;
   const root = el('div', {});
-  root.append(pageHead('提醒', rem.all.length ? `${rem.all.length} 项待处理` : '暂无提醒', [
+  const sub = rem.all.length
+    ? `${rem.all.length} 项待处理`
+    : (rem.birthdays && rem.birthdays.length ? '暂无待办' : '暂无提醒');
+  root.append(pageHead('提醒', sub, [
     el('button', {
       class: 'icon-btn', 'aria-label': '导出到系统日历', html: icon('calendar', 19),
       onclick: () => app.exportICS()
@@ -376,7 +383,15 @@ export function renderReminders(app) {
     section('以后', rem.later) || document.createComment('')
   );
 
-  if (!rem.all.length) {
+  // 纪念日不参与「待办」计数，单独一块
+  if (rem.birthdays && rem.birthdays.length) {
+    root.append(el('div', { class: 'sec-title' }, '纪念日'));
+    root.append(el('div', { class: 'card flush', style: { padding: '2px 14px' } },
+      ...rem.birthdays.map((i) => remRow(i, app))
+    ));
+  }
+
+  if (!rem.all.length && !(rem.birthdays && rem.birthdays.length)) {
     root.append(el('div', { class: 'empty' },
       el('div', { html: icon('bell', 34) }),
       el('p', {}, '没有待办提醒'),
@@ -438,7 +453,7 @@ export function renderArchive(app) {
         )
       )
     ),
-    kv('生日', pet.birthday ? `${fmtDate(pet.birthday)}（${age}）` : ''),
+    kv('生日', pet.birthday ? fmtDate(pet.birthday) : ''),
     kv('到家', pet.homeDate ? fmtDate(pet.homeDate) : ''),
     kv('性别', pet.sex),
     pet.vet ? kv('常去医院', pet.vet) : null,
@@ -454,9 +469,9 @@ export function renderArchive(app) {
   root.append(el('div', { class: 'sec-title' }, '数据概览'));
   root.append(el('section', { class: 'card' },
     el('div', { class: 'hero-stats', style: { marginTop: '0', paddingTop: '0', borderTop: '0' } },
-      statNode(ov.count, '', '条记录'),
-      statNode(ov.weights, '', '次称重'),
-      statNode(ov.photos, '', '条带照片')
+      statNode(ov.count, '', '条记录', () => app.openTimeline('all')),
+      statNode(ov.weights, '', '次称重', () => app.openTimeline('weight')),
+      statNode(ov.photos, '', '条带照片', () => app.openTimeline('photo'))
     ),
     el('div', { class: 'card-head', style: { marginTop: '16px' } },
       el('h3', { class: 'card-title', style: { fontSize: '13.5px' } }, '近 7 天喂食'),

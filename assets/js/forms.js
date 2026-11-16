@@ -152,6 +152,9 @@ function photoEditor(initialIds = [], onChange) {
     }
   });
 
+  // 关键：先渲染一次，否则「添加照片」按钮根本不存在
+  render();
+
   return {
     node: el('div', {}, el('div', { class: 'field-label', style: { marginBottom: '8px' } }, '照片'), grid, fileInput),
     items,
